@@ -469,6 +469,90 @@ func TestImageRef_TransformICCProfile(t *testing.T) {
 	assert.True(t, image.HasICCProfile())
 }
 
+func TestImageRef_ExportWebp__PreserveICCProfile(t *testing.T) {
+	Startup(nil)
+
+	image, err := NewImageFromFile(resources + "jpg-24bit-icc-adobe-rgb.jpg")
+	require.NoError(t, err)
+
+	require.True(t, image.HasICCProfile())
+
+	params := NewWebpExportParams()
+	params.IccProfile = ""
+
+	buffer, _, err := image.ExportWebp(params)
+	require.NoError(t, err)
+	exportedImage, err := NewImageFromBuffer(buffer)
+	require.NoError(t, err)
+
+	require.True(t, exportedImage.HasICCProfile())
+	require.Equal(t, image.GetICCProfile(), exportedImage.GetICCProfile())
+}
+
+func TestImageRef_ExportWebp__StripICCProfile(t *testing.T) {
+	Startup(nil)
+
+	image, err := NewImageFromFile(resources + "jpg-24bit-icc-adobe-rgb.jpg")
+	require.NoError(t, err)
+
+	require.True(t, image.HasICCProfile())
+
+	params := NewWebpExportParams()
+	params.IccProfile = "none"
+
+	buffer, _, err := image.ExportWebp(params)
+	require.NoError(t, err)
+	exportedImage, err := NewImageFromBuffer(buffer)
+	require.NoError(t, err)
+
+	require.False(t, exportedImage.HasICCProfile())
+}
+
+func TestImageRef_ExportWebp__OptimizedICCProfile(t *testing.T) {
+	Startup(nil)
+
+	image, err := NewImageFromFile(resources + "jpg-24bit-icc-adobe-rgb.jpg")
+	require.NoError(t, err)
+
+	err = image.OptimizeICCProfile()
+	require.NoError(t, err)
+
+	require.True(t, image.HasICCProfile())
+
+	params := NewWebpExportParams()
+	params.IccProfile = ""
+
+	buffer, _, err := image.ExportWebp(params)
+	require.NoError(t, err)
+	exportedImage, err := NewImageFromBuffer(buffer)
+	require.NoError(t, err)
+
+	require.True(t, exportedImage.HasICCProfile())
+	require.Equal(t, image.GetICCProfile(), exportedImage.GetICCProfile())
+}
+
+func TestImageRef_ExportWebp__OverrideOptimizedICCProfile(t *testing.T) {
+	Startup(nil)
+
+	image, err := NewImageFromFile(resources + "jpg-24bit-icc-adobe-rgb.jpg")
+	require.NoError(t, err)
+
+	err = image.OptimizeICCProfile()
+	require.NoError(t, err)
+
+	require.True(t, image.HasICCProfile())
+
+	params := NewWebpExportParams()
+	params.IccProfile = "none"
+
+	buffer, _, err := image.ExportWebp(params)
+	require.NoError(t, err)
+	exportedImage, err := NewImageFromBuffer(buffer)
+	require.NoError(t, err)
+
+	require.False(t, exportedImage.HasICCProfile())
+}
+
 func TestImageRef_Close(t *testing.T) {
 	Startup(nil)
 
